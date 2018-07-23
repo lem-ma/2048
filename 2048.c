@@ -1,3 +1,7 @@
+/* 2048 Version 1.0
+ * Author: Lem-ma
+ * */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -50,12 +54,12 @@ int printboard(int* board)
     }
     printf("-----------------------------");
     puts("\nPlease enter a character.");
-    puts("h -- left\tl -- right\nj -- down\tk -- up\n");
+    puts("h -- left\tl -- right\nj -- down\tk -- up\nq -- exit\n");
     printf("\n>>> ");
     return j;
 }
 
-void gaming(int* board, char command)
+int gaming(int* board, char command)
 {
     /*
      * 0  1  2  3
@@ -169,16 +173,19 @@ void gaming(int* board, char command)
             for(int j=cache;j<4;j++) board[i+4*j]=0;
         }
     }
-    else puts("Wrong syntax!\n>>> "),gaming(board,obtainchar());
+    else if(command=='q') return 0;
+    else printf("Wrong syntax!\n>>> "),gaming(board,obtainchar());
+    return 1;
 }
 
 int main(void)
 {
+    puts("2048 Version 1.0 by Lem-ma");
     srand(time(NULL));
     int cont=1;
     while(cont)
     {
-        puts("Enter \"q\" to exit, enter any other key to start the game.\n");
+        puts("Enter \"q\" to exit, enter any other key to start the game.");
         if(obtainchar()=='q')
         {
             cont=0;
@@ -193,10 +200,7 @@ int main(void)
             int gamestill=1;
             while(gamestill)
             {
-                if((gamestill=printboard(currentboard)))
-                {
-                    gaming(currentboard, obtainchar()); 
-                }
+                if((gamestill=printboard(currentboard))) gamestill=gaming(currentboard, obtainchar());
             }
         }
     }
