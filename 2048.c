@@ -1,4 +1,4 @@
-/* 2048 Version 2.0b
+/* 2048 Version 2.0
  * Author: Lem-ma
  * */
 
@@ -27,10 +27,10 @@ int writeboard(int* board, int end)
      * */
     for(int i=0;i<4;i++)
     {
-        printf("-----------------------------\n");
+        puts("-----------------------------");
         printf("| %s | %s | %s | %s |\n",table[board[4*i]],table[board[4*i+1]],table[board[4*i+2]],table[board[4*i+3]]);
     }
-    printf("-----------------------------");
+    puts("-----------------------------");
     if(end==1) puts("\nGame ends.\n");
     else if(end==-1)
     {
@@ -40,19 +40,13 @@ int writeboard(int* board, int end)
     {
         puts("\nPlease enter a character.");
         puts("h -- left\tl -- right\nj -- down\tk -- up\nq -- exit\ts -- save\n");
-        printf("\n>>> ");
+        fputs("\n>>> ",stdout);
     }
     return end;
 }
 
 void gaming(int* board, char command)
 {
-    /*
-     * 0  1  2  3
-     * 4  5  6  7
-     * 8  9  10 11
-     * 12 13 14 15
-     * */
     int cache;
     int merge;
     if(command=='h')
@@ -184,7 +178,6 @@ void add_2048_extension(char name[], size_t length)
 
 char launchboard(int* board)
 {
-    /*Check zero points*/
     int j=0;
     int won=0;
     int logging[16];
@@ -215,7 +208,7 @@ char launchboard(int* board)
         if(c=='q') return 0;
         else if(c=='s')
         {
-            fputs("Please enter the file name to save (without extension, MAX. 10 characters): ",stdout);
+            fputs("\nPlease enter the file name to save (without extension, MAX. 10 characters): ",stdout);
             char filename[16];
             size_t length=readalnum(filename, 10);
             add_2048_extension(filename, length);
@@ -223,8 +216,14 @@ char launchboard(int* board)
             if(pfile==NULL) puts("\nFile error!");
             else
             {
-                fwrite(board,sizeof(int),16,pfile);
+                if(fwrite(board,sizeof(int),16,pfile)!=16)
+                {
+                    puts("Unsuccessful file saving. Game continues.");
+                    return 'c';
+                }
                 fclose(pfile);
+                puts("File saved. Enter \"c\" to continue the game, or any other key to exit.");
+                if(obtainchar()=='c') return 'c';
             }
             return 0;
         }
@@ -234,7 +233,7 @@ char launchboard(int* board)
 
 int main(void)
 {
-    puts("2048 Version 2.0 (beta) by Lem-ma");
+    puts("2048 Version 2.0 by Lem-ma");
     srand(time(NULL));
     int cont=1;
     while(cont)
@@ -250,25 +249,38 @@ int main(void)
             int currentboard[16];
             if(init=='s')
             {
-                fputs("Please enter the file name, without extension: ",stdout);
+                fputs("\nPlease enter the file name, without extension: ",stdout);
                 char name[16];
-                size_t filenamesize=readalnum(name, 10);
-                add_2048_extension(name, filenamesize);
+                size_t k=readalnum(name, 10);
+                add_2048_extension(name, k);
                 FILE* pfile=fopen(name, "rb");
                 if(pfile==NULL)
                 {
-                    printf("\nFile %s does not exist!",name);
+                    printf("\nFile %s does not exist!\n",name);
                     continue;
                 }
                 else
                 {
                     if(fread(currentboard,sizeof(int),16,pfile)!=16)
                     {
-                        printf("\nFile %s is broken!", name);
+                        printf("\nFile %s is broken!\n", name);
+                        fclose(pfile);
                         continue;
                     }
                     else
                     {
+                        k=0;
+                        for(int i=0;i<16;i++)
+                        {
+                            if(currentboard[i]>11||currentboard[i]<0)
+                            {
+                                printf("\nFile %s is broken\n", name);
+                                fclose(pfile);
+                                k=1;
+                                break;
+                            }
+                        }
+                        if(k) continue;
                         writeboard(currentboard,-1);
                         if(obtainchar()=='q') continue;
                     }
