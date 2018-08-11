@@ -1,4 +1,4 @@
-/* 2048 Version 2.0
+/* 2048 Version 2.1
  * Author: Lem-ma
  * */
 
@@ -32,10 +32,6 @@ int writeboard(int* board, int end)
     }
     puts("-----------------------------");
     if(end==1) puts("\nGame ends.\n");
-    else if(end==-1)
-    {
-        puts("\nEnter \"q\" to exit, or any other key to play the game.\nNote: the continued game would not override the file.");
-    }
     else
     {
         puts("\nPlease enter a character.");
@@ -176,7 +172,7 @@ void add_2048_extension(char name[], size_t length)
     strcpy(name+length, extension);
 }
 
-char launchboard(int* board)
+char launchboard(int* board, int putstone)
 {
     int j=0;
     int won=0;
@@ -195,7 +191,7 @@ char launchboard(int* board)
             break;
         }
     }
-    if(j)
+    if(j&&putstone)
     {
         board[logging[rand()%j]]=1;
     }
@@ -203,37 +199,40 @@ char launchboard(int* board)
     else
     {
         char c;
-        while((c=obtainchar())!='h'&&c!='j'&&c!='k'&&c!='l'&&c!='q'&&c!='s')
-            fputs("\nWrong syntax! Please input again.\n>>> ",stdout);
-        if(c=='q') return 0;
-        else if(c=='s')
+        while((c=obtainchar())!='h'&&c!='j'&&c!='k'&&c!='l'&&c!='q')
         {
-            fputs("\nPlease enter the file name to save (without extension, MAX. 10 characters): ",stdout);
-            char filename[16];
-            size_t length=readalnum(filename, 10);
-            add_2048_extension(filename, length);
-            FILE* pfile=fopen(filename,"wb");
-            if(pfile==NULL) puts("\nFile error!");
+            if(c=='s')
+            {
+                fputs("\nPlease enter the file name to save (without extension, MAX. 10 characters): ",stdout);
+                char filename[16];
+                size_t length=readalnum(filename, 10);
+                add_2048_extension(filename, length);
+                FILE* pfile=fopen(filename,"wb");
+                if(pfile==NULL) puts("\nFile error!");
+                else
+                {
+                    if(fwrite(board,sizeof(int),16,pfile)!=16)
+                    {
+                        puts("File saving fails.");
+                    }
+                    fclose(pfile);
+                    puts("File saved.");
+                }
+                fputs(">>> ",stdout);
+            }
             else
             {
-                if(fwrite(board,sizeof(int),16,pfile)!=16)
-                {
-                    puts("Unsuccessful file saving. Game continues.");
-                    return 'c';
-                }
-                fclose(pfile);
-                puts("File saved. Enter \"c\" to continue the game, or any other key to exit.");
-                if(obtainchar()=='c') return 'c';
+                fputs("Wrong syntax! Please input again.\n>>> ",stdout);
             }
-            return 0;
         }
+        if(c=='q') return 0;
         else return c;
     }
 }
 
 int main(void)
 {
-    puts("2048 Version 2.0 by Lem-ma");
+    puts("2048 Version 2.1 by Lem-ma");
     srand(time(NULL));
     int cont=1;
     while(cont)
@@ -281,11 +280,10 @@ int main(void)
                             }
                         }
                         if(k) continue;
-                        writeboard(currentboard,-1);
-                        if(obtainchar()=='q') continue;
+                        init=1;
+                        fclose(pfile);
                     }
                 }
-                fclose(pfile);
             }
             else
             {
@@ -293,11 +291,16 @@ int main(void)
                 {
                     currentboard[i]=0;
                 }
+                init=0;
             }
             char gamestill=1;
+            if(init&&(gamestill=launchboard(currentboard,0)))
+            {
+                gaming(currentboard,gamestill);
+            }
             while(gamestill)
             {
-                if((gamestill=launchboard(currentboard))) gaming(currentboard, gamestill);
+                if((gamestill=launchboard(currentboard,1))) gaming(currentboard, gamestill);
             }
         }
     }
